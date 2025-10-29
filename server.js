@@ -15,13 +15,15 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const AES_SECRET = process.env.AES_SECRET;
 
-// MySQL connection pool
+// ✅ MySQL connection pool (Updated for Railway)
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS || '',
   database: process.env.DB_NAME || 'securepass',
-  connectionLimit: 10
+  port: process.env.DB_PORT || 3306,
+  connectionLimit: 10,
+  ssl: { rejectUnauthorized: false } // ✅ Important for Railway
 });
 
 // Test database connection
@@ -30,7 +32,8 @@ console.log('DB Config:', {
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASS ? '[HIDDEN]' : '[EMPTY]',
-  database: process.env.DB_NAME || 'securepass'
+  database: process.env.DB_NAME || 'securepass',
+  port: process.env.DB_PORT || 3306
 });
 
 pool.getConnection((err, connection) => {
@@ -43,7 +46,7 @@ pool.getConnection((err, connection) => {
   }
 });
 
-// helper: run query (promisified)
+// Promisified database
 const db = pool.promise();
 
 // Middleware: verify JWT
@@ -58,7 +61,7 @@ function verifyToken(req, res, next) {
   });
 }
 
-// Encrypt / decrypt helpers using AES
+// AES Encrypt / Decrypt
 function encrypt(text) {
   return CryptoJS.AES.encrypt(text, AES_SECRET).toString();
 }
@@ -71,7 +74,7 @@ function decrypt(cipher) {
   }
 }
 
-// ---------- Auth ----------
+// ---------- AUTH ----------
 app.post('/signup', async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -106,7 +109,7 @@ app.post('/login', async (req, res) => {
   }
 });
 
-// Profile update
+// ---------- PROFILE ----------
 app.put('/update-profile', verifyToken, async (req, res) => {
   try {
     const { name } = req.body;
@@ -124,12 +127,11 @@ app.put('/update-profile', verifyToken, async (req, res) => {
   }
 });
 
-// Forgot password endpoint (placeholder)
 app.post('/forgot-password', async (req, res) => {
   res.json({ message: 'Forgot password endpoint not implemented yet' });
 });
 
-// ---------- Passwords ----------
+// ---------- PASSWORD MANAGEMENT ----------
 app.post('/passwords', verifyToken, async (req, res) => {
   try {
     const { title, username, password } = req.body;
@@ -184,6 +186,7 @@ app.delete('/passwords/:id', verifyToken, async (req, res) => {
   }
 });
 
+// ---------- SERVER START ----------
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Local: http://localhost:${PORT}`);
