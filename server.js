@@ -15,25 +15,26 @@ const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET;
 const AES_SECRET = process.env.AES_SECRET;
 
-// ✅ MySQL connection pool (compatible with both Local & Railway)
+// ---------------- MySQL Connection Pool ----------------
+// Works for both Local and Railway
 const pool = mysql.createPool({
-  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASS || '',
-  database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'securepass',
-  port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS || '',
+  database: process.env.DB_NAME || 'securepass',
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
   connectionLimit: 10,
-  ssl: { rejectUnauthorized: false } // ✅ Required for Railway MySQL
+  ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false // SSL only for Railway
 });
 
 // ---------- Test DB Connection ----------
 console.log('🔄 Testing database connection...');
 console.log('DB Config:', {
-  host: process.env.MYSQLHOST || process.env.DB_HOST || 'localhost',
-  user: process.env.MYSQLUSER || process.env.DB_USER || 'root',
-  password: process.env.MYSQLPASSWORD || process.env.DB_PASS ? '[HIDDEN]' : '[EMPTY]',
-  database: process.env.MYSQLDATABASE || process.env.DB_NAME || 'securepass',
-  port: process.env.MYSQLPORT || process.env.DB_PORT || 3306,
+  host: process.env.DB_HOST || 'localhost',
+  user: process.env.DB_USER || 'root',
+  password: process.env.DB_PASS ? '[HIDDEN]' : '[EMPTY]',
+  database: process.env.DB_NAME || 'securepass',
+  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 3306,
 });
 
 pool.getConnection((err, connection) => {
@@ -47,7 +48,7 @@ pool.getConnection((err, connection) => {
 
 const db = pool.promise();
 
-// ---------- Middleware: Verify JWT ----------
+// ---------------- JWT Middleware ----------------
 function verifyToken(req, res, next) {
   const header = req.headers['authorization'];
   if (!header) return res.status(401).json({ error: 'Authorization required' });
@@ -59,10 +60,11 @@ function verifyToken(req, res, next) {
   });
 }
 
-// ---------- AES Encrypt/Decrypt ----------
+// ---------------- AES Encryption ----------------
 function encrypt(text) {
   return CryptoJS.AES.encrypt(text, AES_SECRET).toString();
 }
+
 function decrypt(cipher) {
   try {
     const bytes = CryptoJS.AES.decrypt(cipher, AES_SECRET);
@@ -72,9 +74,9 @@ function decrypt(cipher) {
   }
 }
 
-// ---------- Routes ----------
+// ---------------- Routes ----------------
 
-// ✅ Root route (for Railway test)
+// Root route
 app.get('/', (req, res) => {
   res.send('🚀 Vaultify Backend is Running Successfully on Railway!');
 });
