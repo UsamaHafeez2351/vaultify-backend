@@ -198,3 +198,19 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`🌐 Local: http://localhost:${PORT}`);
 });
+// ---------- DELETE ACCOUNT ----------
+app.delete('/delete-account', verifyToken, async (req, res) => {
+  try {
+    await db.query('DELETE FROM passwords WHERE user_id = ?', [req.userId]);
+    const [result] = await db.query('DELETE FROM users WHERE id = ?', [req.userId]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({ message: 'Account and all associated data deleted successfully' });
+  } catch (error) {
+    console.error('Delete account error:', error);
+    res.status(500).json({ error: 'Failed to delete account' });
+  }
+});
