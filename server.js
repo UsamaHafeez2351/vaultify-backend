@@ -27,7 +27,7 @@ const pool = mysql.createPool({
   ssl: process.env.DB_HOST ? { rejectUnauthorized: false } : false // SSL only for Railway
 });
 
-// ---------- Test DB Connection ----------
+// ---------- Test DB Connection ---------- for testing purpose
 console.log('🔄 Testing database connection...');
 console.log('DB Config:', {
   host: process.env.DB_HOST || 'localhost',
