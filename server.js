@@ -16,7 +16,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const AES_SECRET = process.env.AES_SECRET;
 
 // ---------------- MySQL Connection Pool for testing purposes ----------------
-// Works for both Local and Railway
+// Works for both Local and Railway 
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
